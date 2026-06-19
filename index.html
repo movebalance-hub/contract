@@ -387,8 +387,54 @@ function nextStep2() {
   }
   goStep(3);
 }
+// ── Supabase ──
+const SUPABASE_URL = 'https://srzbivahyjtqphkxpvbf.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNyemJpdmFoeWp0cXBoa3hwdmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4Njk1NzQsImV4cCI6MjA5NzQ0NTU3NH0.S0fj4XyWpbO6QaDp7XLg3_ibvZvqyXSMPFh-7--9P70';
+
+async function saveContract() {
+  const g = id => document.getElementById(id)?.value || null;
+  const twTime = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  const data = {
+    last_name: g('lastName'),
+    first_name: g('firstName'),
+    phone: g('phone'),
+    email: g('email'),
+    gender: g('gender'),
+    birthday: g('birthday') || null,
+    address: g('address'),
+    emergency_name: g('emergencyName'),
+    emergency_phone: g('emergencyPhone'),
+    emergency_rel: g('emergencyRel'),
+    service_type: selectedService,
+    plan_name: selectedPlan.name,
+    plan_price: selectedPlan.price,
+    pay_method: g('payMethod'),
+    total_amount: g('totalAmt'),
+    start_date: g('startDate'),
+    end_date: g('endDate'),
+    signed_at_tw: twTime,
+  };
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/contracts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error(res.status);
+    console.log('合約已儲存至 Supabase');
+  } catch (e) {
+    console.warn('Supabase 儲存失敗：', e);
+  }
+}
+
 function nextStep3() {
   if (sigEmpty) { alert('請客戶完成簽名後再繼續'); return; }
+  saveContract();
   goStep(4);
 }
 
