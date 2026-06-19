@@ -323,7 +323,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       <div class="card-title"><i class="ti ti-mail"></i>寄送合約副本</div>
       <div class="email-row">
         <input type="email" id="sendEmail" placeholder="客戶 Email">
-        <button class="btn primary sm" onclick="doSendEmail()"><i class="ti ti-send"></i> 寄送</button>
+        <button class="btn primary sm" onclick="doSendEmail(this)"><i class="ti ti-send"></i> 寄送</button>
       </div>
       <p class="hint" style="margin-top:8px">副本將包含：會員資料、購買方案、簽署確認</p>
     </div>
@@ -607,7 +607,7 @@ async function saveContract() {
   }
 }
 
-async function doSendEmail() {
+async function doSendEmail(btn) {
   const email = document.getElementById('sendEmail').value.trim();
   if (!email) { alert('請輸入客戶 Email'); return; }
   const name = (document.getElementById('lastName').value + document.getElementById('firstName').value).trim();
@@ -633,9 +633,8 @@ async function doSendEmail() {
       <p style="font-size:13px;color:#aaa;margin-top:8px">永衡運動股份有限公司</p>
     </div>`;
 
-  const btn = event.target;
   btn.disabled = true;
-  btn.textContent = '寄送中...';
+  btn.innerHTML = '寄送中...';
 
   try {
     const res = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
@@ -654,16 +653,16 @@ async function doSendEmail() {
       })
     });
     if (res.ok) {
-      btn.textContent = '✅ 已寄出';
+      btn.innerHTML = '✅ 已寄出';
     } else {
       const err = await res.json();
       console.warn('寄信失敗：', err);
-      btn.textContent = '❌ 寄送失敗';
+      btn.innerHTML = '❌ 寄送失敗';
       btn.disabled = false;
     }
   } catch(e) {
     console.warn('寄信錯誤：', e);
-    btn.textContent = '❌ 寄送失敗';
+    btn.innerHTML = '❌ 寄送失敗';
     btn.disabled = false;
   }
 }
