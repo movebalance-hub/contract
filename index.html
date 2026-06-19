@@ -638,11 +638,12 @@ async function doSendEmail() {
   btn.textContent = '寄送中...';
 
   try {
-    const res = await fetch('https://api.resend.com/emails', {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${RESEND_KEY}`
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`
       },
       body: JSON.stringify({
         from: 'noreply@trainbalance.com',
