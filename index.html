@@ -394,6 +394,30 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 async function saveContract() {
   const g = id => document.getElementById(id)?.value || null;
   const twTime = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+
+  // 上傳簽名圖片到 Supabase Storage
+  let signatureUrl = null;
+  try {
+    const canvas = document.getElementById('sigCanvas');
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    const fileName = `sig_${Date.now()}.png`;
+    const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/signatures/${fileName}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'image/png',
+        'x-upsert': 'true'
+      },
+      body: blob
+    });
+    if (uploadRes.ok) {
+      signatureUrl = `${SUPABASE_URL}/storage/v1/object/public/signatures/${fileName}`;
+    }
+  } catch(e) {
+    console.warn('簽名上傳失敗：', e);
+  }
+
   const data = {
     last_name: g('lastName'),
     first_name: g('firstName'),
@@ -413,6 +437,7 @@ async function saveContract() {
     start_date: g('startDate'),
     end_date: g('endDate'),
     signed_at_tw: twTime,
+    signature_url: signatureUrl,
   };
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/contracts`, {
