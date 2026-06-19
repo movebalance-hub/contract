@@ -154,27 +154,33 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div class="card" id="pkgCard">
       <div class="card-title"><i class="ti ti-package"></i>課程 / 方案</div>
       <div class="plan-grid" id="planSelect">
-        <div class="plan-card selected" onclick="selectPlan(this,'單堂課程','2,080 元','單次購買')">
-          <div class="plan-check"></div>
-          <div class="pname">單堂</div>
-          <div class="pprice">2,080 元</div>
-          <div class="pnote">單次購買</div>
-        </div>
-        <div class="plan-card" onclick="selectPlan(this,'10堂課程包','17,000 元','效期 150 天')">
+        <div class="plan-card selected" onclick="selectPlan(this,'10堂課程包','16,000 元','效期 100 天')">
           <div class="plan-check"></div>
           <div class="pname">10 堂課程包</div>
-          <div class="pprice">17,000 元</div>
-          <div class="pnote">效期 150 天</div>
+          <div class="pprice">16,000 元</div>
+          <div class="pnote">效期 100 天</div>
         </div>
-        <div class="plan-card" onclick="selectPlan(this,'20堂課程包','32,000 元','效期 300 天')">
+        <div class="plan-card" onclick="selectPlan(this,'12堂課程包','21,360 元','效期 120 天')">
           <div class="plan-check"></div>
-          <div class="pname">20 堂課程包</div>
-          <div class="pprice">32,000 元</div>
-          <div class="pnote">效期 300 天</div>
+          <div class="pname">12 堂課程包</div>
+          <div class="pprice">21,360 元</div>
+          <div class="pnote">效期 120 天</div>
         </div>
-        <div class="plan-card" onclick="selectPlan(this,'月費會員','—','依方案另議')">
+        <div class="plan-card" onclick="selectPlan(this,'24堂課程包','40,320 元','效期 240 天')">
           <div class="plan-check"></div>
-          <div class="pname">月費會員</div>
+          <div class="pname">24 堂課程包</div>
+          <div class="pprice">40,320 元</div>
+          <div class="pnote">效期 240 天</div>
+        </div>
+        <div class="plan-card" onclick="selectPlan(this,'36堂課程包','56,880 元','效期 360 天')">
+          <div class="plan-check"></div>
+          <div class="pname">36 堂課程包</div>
+          <div class="pprice">56,880 元</div>
+          <div class="pnote">效期 360 天</div>
+        </div>
+        <div class="plan-card" onclick="selectPlan(this,'場館會員方案','依方案另議','自由訓練')">
+          <div class="plan-check"></div>
+          <div class="pname">場館會員方案</div>
           <div class="pprice">依方案另議</div>
           <div class="pnote">自由訓練</div>
         </div>
@@ -214,7 +220,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       <div class="card-title"><i class="ti ti-shield-check"></i>個人資料保護聲明 <span class="badge-req">必選</span></div>
       <div class="clause-list">
         <div class="clause-item">
-          <div class="clause-header" onclick="toggleClause(this)">
+          <div class="clause-header" id="privacyHeader">
             <span class="clause-num">個資法</span>
             <span class="clause-title">個人資料蒐集使用同意</span>
             <i class="ti ti-chevron-down chevron"></i>
@@ -290,7 +296,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 // ── State ──
 let currentStep = 0;
 let selectedService = '一對一教練課程';
-let selectedPlan = { name: '單堂課程', price: '2,080 元' };
+let selectedPlan = { name: '10堂課程包', price: '16,000 元' };
 let sigCtx = null, sigDrawing = false, sigEmpty = true;
 
 // ── Date display ──
@@ -302,7 +308,7 @@ const clauses = [
   { num: '第一條', title: '乙方（永衡運動）基本資料', body: '乙方：永衡運動股份有限公司（永衡訓練），代表人孫煜旋。電話：04-3700-5376，地址：台中市南區工學路155巷15弄5號，統編：90237272，網址：trainbalance.com。' },
   { num: '第二條', title: '入會條件及場館使用', body: '甲方同意：(1) 授權使用個資通知活動；(2) 授權信用卡扣款；(3) 入館方式為掃描個人專屬QR碼，不得借予他人使用；(4) 親自使用場館，不得借予他人；(5) 未成年需法定代理人同意。' },
   { num: '第三條', title: '會員權利義務與契約期限', body: '甲方自契約生效時起行使會員權利，需遵守場館規範。乙方營業時間：週一至週五 13:00～22:00、週六至週日 13:00～18:00。因天災等不可抗力情形得暫停營業。' },
-  { num: '第四條', title: '費用約定', body: '一對一教練課程收費 2,080 元／時。場館自由訓練會員費率依首頁銷售明細為準。課程應於堂數×15天內用完，逾期視同放棄。課程僅限本人使用。費率調整須提前一個月公告。' },
+  { num: '第四條', title: '費用約定', body: '一對一教練課程收費 2,080 元／時。課程包方案：10堂16,000元（效期100天）、12堂21,360元（效期120天）、24堂40,320元（效期240天）、36堂56,880元（效期360天）。課程應於效期內使用完畢，逾期視同放棄。場館自由訓練會員費率依首頁銷售明細為準。課程僅限本人使用。費率調整須提前一個月公告。' },
   { num: '第六條', title: '購買後七日內解約權', body: '繳費後七日內未接受任何課程者，可全額退費解除契約。' },
   { num: '第七條', title: '終止契約退費計算', body: '退費 ＝ 已繳金額 − 已上課堂數差額 − 作業費500元 − 刷卡手續費5%。因傷病不可抗力終止者，免收手續費。' },
   { num: '第八條', title: '場地使用規範', body: '採預約制。心臟病、高血壓、癲癇等疾病請事先告知。有開刀住院病史需提供醫師證明。需穿著適當運動服裝與運動鞋。場館全面錄影監視。場館自由訓練會員於無教練陪同期間，應自行負責訓練安全。' },
@@ -313,17 +319,22 @@ const clauses = [
 ];
 
 function buildClauses() {
-  document.getElementById('clauseList').innerHTML = clauses.map(c => `
-    <div class="clause-item">
-      <div class="clause-header" onclick="toggleClause(this)">
+  const list = document.getElementById('clauseList');
+  list.innerHTML = clauses.map((c, i) => `
+    <div class="clause-item" data-idx="${i}">
+      <div class="clause-header">
         <span class="clause-num">${c.num}</span>
         <span class="clause-title">${c.title}</span>
         <i class="ti ti-chevron-down chevron"></i>
       </div>
       <div class="clause-body">${c.body}</div>
     </div>`).join('');
+  list.querySelectorAll('.clause-header').forEach(h => {
+    h.addEventListener('click', () => toggleClause(h));
+  });
 }
 buildClauses();
+document.getElementById('privacyHeader').addEventListener('click', function() { toggleClause(this); });
 
 function toggleClause(h) {
   const b = h.nextElementSibling, ch = h.querySelector('.chevron');
@@ -467,7 +478,7 @@ function newContract() {
   document.querySelectorAll('#serviceSelect .plan-card').forEach((c, i) => c.classList.toggle('selected', i === 0));
   document.querySelectorAll('#planSelect .plan-card').forEach((c, i) => c.classList.toggle('selected', i === 0));
   selectedService = '一對一教練課程';
-  selectedPlan = { name: '單堂課程', price: '2,080 元' };
+  selectedPlan = { name: '10堂課程包', price: '16,000 元' };
   goStep(0);
 }
 </script>
