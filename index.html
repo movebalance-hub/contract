@@ -388,8 +388,8 @@ function nextStep2() {
   goStep(3);
 }
 // ── Supabase ──
-const SUPABASE_URL = 'https://srzbivahyjtqphkxpvbf.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNyemJpdmFoeWp0cXBoa3hwdmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4Njk1NzQsImV4cCI6MjA5NzQ0NTU3NH0.S0fj4XyWpbO6QaDp7XLg3_ibvZvqyXSMPFh-7--9P70';
+const SUPABASE_URL = 'https://kdfsgguyaxrbyctxnlih.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_MCjbNZmcI0LVmDjGOqUosg_6vnxDeJv';
 
 async function saveContract() {
   const g = id => document.getElementById(id)?.value || null;
@@ -446,6 +446,7 @@ async function saveContract() {
         'Content-Type': 'application/json',
         'apikey': SUPABASE_KEY,
         'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Profile': 'contract',
         'Prefer': 'return=minimal'
       },
       body: JSON.stringify(data)
@@ -530,8 +531,6 @@ function clearSig() {
 }
 
 // ── Actions ──
-// ── Resend ──
-const RESEND_KEY = 're_EhwyVLNH_MfvbSfHMGp8Jr52V9y4gusxd';
 let lastSignatureUrl = null;
 
 async function saveContract() {
@@ -594,6 +593,7 @@ async function saveContract() {
         'Content-Type': 'application/json',
         'apikey': SUPABASE_KEY,
         'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Profile': 'contract',
         'Prefer': 'return=minimal'
       },
       body: JSON.stringify(data)
