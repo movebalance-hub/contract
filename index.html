@@ -316,16 +316,16 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       <div class="success-wrap">
         <span class="success-icon">✅</span>
         <h2>合約簽署完成</h2>
-        <p>請填入客戶 Email，寄送合約副本</p>
+        <p id="autoSendStatus">正在自動寄送合約副本…</p>
       </div>
     </div>
     <div class="card">
-      <div class="card-title"><i class="ti ti-mail"></i>寄送合約副本</div>
+      <div class="card-title"><i class="ti ti-mail"></i>補寄合約副本</div>
+      <p class="hint" style="margin-bottom:10px">系統已自動寄送一份給客戶（如有留 Email）並副本給永衡運動信箱。若要另外補寄到其他信箱，可在下方輸入寄送。</p>
       <div class="email-row">
         <input type="email" id="sendEmail" placeholder="客戶 Email">
-        <button class="btn primary sm" onclick="doSendEmail(this)"><i class="ti ti-send"></i> 寄送</button>
+        <button class="btn primary sm" onclick="doSendEmail(this)"><i class="ti ti-send"></i> 補寄</button>
       </div>
-      <p class="hint" style="margin-top:8px">副本將包含：會員資料、購買方案、簽署確認</p>
     </div>
     <div class="card">
       <div class="card-title"><i class="ti ti-settings"></i>其他操作</div>
@@ -366,6 +366,7 @@ function goStep(n) {
   if (n === 4) {
     const em = document.getElementById('email').value;
     if (em) document.getElementById('sendEmail').value = em;
+    autoSendContractEmail();
   }
 }
 
@@ -390,77 +391,11 @@ function nextStep2() {
 // ── Supabase ──
 const SUPABASE_URL = 'https://kdfsgguyaxrbyctxnlih.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_MCjbNZmcI0LVmDjGOqUosg_6vnxDeJv';
+const STUDIO_EMAIL = 'equilibriumm6@gmail.com';
 
-async function saveContract() {
-  const g = id => document.getElementById(id)?.value || null;
-  const twTime = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-
-  // 上傳簽名圖片到 Supabase Storage
-  let signatureUrl = null;
-  try {
-    const canvas = document.getElementById('sigCanvas');
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-    const fileName = `sig_${Date.now()}.png`;
-    const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/signatures/${fileName}`, {
-      method: 'POST',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Content-Type': 'image/png',
-        'x-upsert': 'true'
-      },
-      body: blob
-    });
-    if (uploadRes.ok) {
-      signatureUrl = `${SUPABASE_URL}/storage/v1/object/public/signatures/${fileName}`;
-    }
-  } catch(e) {
-    console.warn('簽名上傳失敗：', e);
-  }
-
-  const data = {
-    last_name: g('lastName'),
-    first_name: g('firstName'),
-    phone: g('phone'),
-    email: g('email'),
-    gender: g('gender'),
-    birthday: g('birthday') || null,
-    address: g('address'),
-    emergency_name: g('emergencyName'),
-    emergency_phone: g('emergencyPhone'),
-    emergency_rel: g('emergencyRel'),
-    service_type: selectedService,
-    plan_name: selectedPlan.name,
-    plan_price: selectedPlan.price,
-    pay_method: g('payMethod'),
-    total_amount: g('totalAmt'),
-    start_date: g('startDate'),
-    end_date: g('endDate'),
-    signed_at_tw: twTime,
-    signature_url: signatureUrl,
-  };
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/contracts`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Content-Profile': 'contract',
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error(res.status);
-    console.log('合約已儲存至 Supabase');
-  } catch (e) {
-    console.warn('Supabase 儲存失敗：', e);
-  }
-}
-
-function nextStep3() {
+async function nextStep3() {
   if (sigEmpty) { alert('請客戶完成簽名後再繼續'); return; }
-  saveContract();
+  await saveContract();
   goStep(4);
 }
 
@@ -607,16 +542,14 @@ async function saveContract() {
   }
 }
 
-async function doSendEmail(btn) {
-  const email = document.getElementById('sendEmail').value.trim();
-  if (!email) { alert('請輸入客戶 Email'); return; }
+function buildContractEmailHtml() {
   const name = (document.getElementById('lastName').value + document.getElementById('firstName').value).trim();
   const amount = document.getElementById('totalAmt').value;
   const payMethod = document.getElementById('payMethod').value;
   const twDate = new Date().toLocaleDateString('zh-TW', { timeZone: 'Asia/Taipei' });
   const sigHtml = lastSignatureUrl ? `<p><strong>客戶簽名：</strong><br><img src="${lastSignatureUrl}" style="max-width:300px;border:1px solid #eee;border-radius:8px;margin-top:8px"></p>` : '';
 
-  const html = `
+  return `
     <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#333">
       <h2 style="color:#1a1a1a;border-bottom:2px solid #1a1a1a;padding-bottom:8px">永衡運動 合約簽署確認</h2>
       <p>親愛的 <strong>${name || '會員'}</strong> 您好，</p>
@@ -646,35 +579,60 @@ async function doSendEmail(btn) {
       <p style="margin-top:24px;font-size:13px;color:#888">如有任何問題，請聯絡我們：<br>電話：04-3700-5376　Email：equilibriumm6@gmail.com</p>
       <p style="font-size:13px;color:#aaa;margin-top:8px">永衡運動股份有限公司</p>
     </div>`;
+}
+
+async function postContractEmail(to, cc) {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`
+    },
+    body: JSON.stringify({
+      from: 'noreply@trainbalance.com',
+      to,
+      cc,
+      subject: '永衡運動 合約簽署確認',
+      html: buildContractEmailHtml()
+    })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `HTTP ${res.status}`);
+  }
+}
+
+// 簽署完成、進入「完成」頁時自動呼叫：有留客戶 Email 就寄給客戶並副本給永衡運動信箱，
+// 沒留 Email 的話至少確保永衡運動這邊收得到一份紀錄
+async function autoSendContractEmail() {
+  const statusEl = document.getElementById('autoSendStatus');
+  const customerEmail = document.getElementById('email').value.trim();
+  const to = customerEmail ? [customerEmail] : [STUDIO_EMAIL];
+  const cc = customerEmail ? [STUDIO_EMAIL] : [];
+
+  try {
+    await postContractEmail(to, cc);
+    statusEl.textContent = customerEmail
+      ? `已自動寄送給客戶（${customerEmail}）並副本給永衡運動`
+      : `客戶未留 Email，已寄送一份給永衡運動（${STUDIO_EMAIL}）`;
+  } catch (e) {
+    console.warn('自動寄送失敗：', e);
+    statusEl.textContent = '自動寄送副本失敗，請用下方欄位手動補寄';
+  }
+}
+
+async function doSendEmail(btn) {
+  const email = document.getElementById('sendEmail').value.trim();
+  if (!email) { alert('請輸入客戶 Email'); return; }
 
   btn.disabled = true;
   btn.innerHTML = '寄送中...';
 
   try {
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`
-      },
-      body: JSON.stringify({
-        from: 'noreply@trainbalance.com',
-        to: [email],
-        cc: ['equilibriumm6@gmail.com'],
-        subject: '永衡運動 合約簽署確認',
-        html: html
-      })
-    });
-    if (res.ok) {
-      btn.innerHTML = '✅ 已寄出';
-    } else {
-      const err = await res.json();
-      console.warn('寄信失敗：', err);
-      btn.innerHTML = '❌ 寄送失敗';
-      btn.disabled = false;
-    }
-  } catch(e) {
+    await postContractEmail([email], [STUDIO_EMAIL]);
+    btn.innerHTML = '✅ 已寄出';
+  } catch (e) {
     console.warn('寄信錯誤：', e);
     btn.innerHTML = '❌ 寄送失敗';
     btn.disabled = false;
